@@ -1,0 +1,500 @@
+openapi: 3.0.3
+info:
+  title: Twikoranire API
+  description: Verified. Safe. Local. — Social activity, events, adventure & transport platform for Rwanda.
+  version: 1.0.0
+  contact:
+    name: Twikoranire Team
+    email: dev@twikoranire.rw
+
+servers:
+  - url: https://api.twikoranire.rw/api
+    description: Production
+  - url: http://localhost:5000/api
+    description: Local development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:            { type: string, format: uuid }
+        phone_number:  { type: string }
+        role:          { type: string, enum: [unverified, verified_local, verified_tourist, host_guide, admin] }
+        full_name:     { type: string }
+        bio:           { type: string }
+        avatar_url:    { type: string }
+        rating_avg:    { type: number }
+        total_ratings: { type: integer }
+        id_verified_at: { type: string, format: date-time }
+
+    Activity:
+      type: object
+      properties:
+        id:              { type: string, format: uuid }
+        creator_id:      { type: string, format: uuid }
+        title:           { type: string }
+        description:     { type: string }
+        activity_type:   { type: string, enum: [club, hike, sports, meal, movie, adventure, other] }
+        address_text:    { type: string }
+        scheduled_at:    { type: string, format: date-time }
+        max_participants: { type: integer }
+        status:          { type: string, enum: [open, full, cancelled, completed] }
+        participant_count: { type: integer }
+        distance_m:      { type: number }
+
+    Event:
+      type: object
+      properties:
+        id:          { type: string, format: uuid }
+        host_id:     { type: string, format: uuid }
+        title:       { type: string }
+        description: { type: string }
+        category:    { type: string }
+        address_text:  { type: string }
+        start_time:  { type: string, format: date-time }
+        end_time:    { type: string, format: date-time }
+        capacity:    { type: integer }
+        price:       { type: number }
+        currency:    { type: string, enum: [RWF, USD, EUR] }
+        status:      { type: string, enum: [draft, published, ongoing, completed, cancelled] }
+        paid_count:  { type: integer }
+
+    Report:
+      type: object
+      properties:
+        id:               { type: string, format: uuid }
+        reporter_id:      { type: string, format: uuid }
+        reported_user_id: { type: string, format: uuid }
+        entity_type:      { type: string, enum: [activity, event, user, message] }
+        entity_id:        { type: string, format: uuid }
+        reason:           { type: string, enum: [scam, harassment, fake_event, dangerous, no_show, other] }
+        status:           { type: string, enum: [pending, resolved, false_flag] }
+        police_packet_url: { type: string }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Register phone number and receive OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone_number]
+              properties:
+                phone_number: { type: string, example: "+250780123456" }
+      responses:
+        "200": { description: OTP sent }
+        "422": { description: Validation error }
+
+  /auth/verify-otp:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Verify OTP and receive JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone_number, otp]
+              properties:
+                phone_number: { type: string }
+                otp:          { type: string, example: "123456" }
+      responses:
+        "200":
+          description: Tokens returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:  { type: string }
+                  refreshToken: { type: string }
+                  role:         { type: string }
+                  userId:       { type: string }
+        "400": { description: Invalid OTP }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Refresh access token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200": { description: New tokens }
+        "401": { description: Invalid refresh token }
+
+  /auth/verify-id:
+    post:
+      tags: [Auth]
+      summary: Upload ID + selfie for identity verification via Smile ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id_image: { type: string, format: binary }
+                selfie:   { type: string, format: binary }
+                id_type:  { type: string, enum: [NATIONAL_ID, PASSPORT] }
+      responses:
+        "200": { description: Verified, role updated }
+        "400": { description: Verification failed }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke refresh token
+      responses:
+        "200": { description: Logged out }
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get own profile
+      responses:
+        "200":
+          description: User profile returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: "#/components/schemas/User" }
+    put:
+      tags: [Users]
+      summary: Update profile
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string }
+                bio:       { type: string }
+                fcm_token: { type: string }
+                avatar:    { type: string, format: binary }
+      responses:
+        "200": { description: Updated }
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get public profile of a user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: User profile }
+        "404": { description: Not found }
+
+  /activities:
+    get:
+      tags: [Activities]
+      summary: List activities near a location
+      parameters:
+        - { in: query, name: lat, required: true, schema: { type: number } }
+        - { in: query, name: lon, required: true, schema: { type: number } }
+        - { in: query, name: radius, schema: { type: integer, default: 5000 } }
+        - { in: query, name: type, schema: { type: string } }
+      responses:
+        "200":
+          description: List of nearby activities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  activities:
+                    type: array
+                    items: { $ref: "#/components/schemas/Activity" }
+    post:
+      tags: [Activities]
+      summary: Create an activity (verified users only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, activity_type, lat, lon, address_text, scheduled_at]
+              properties:
+                title:            { type: string }
+                description:      { type: string }
+                activity_type:    { type: string, enum: [club, hike, sports, meal, movie, adventure, other] }
+                lat:              { type: number }
+                lon:              { type: number }
+                address_text:     { type: string }
+                scheduled_at:     { type: string, format: date-time }
+                max_participants: { type: integer, minimum: 2, maximum: 6 }
+      responses:
+        "201": { description: Activity created }
+        "403": { description: Verification required }
+
+  /activities/{id}/join:
+    post:
+      tags: [Activities]
+      summary: Join an activity
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Joined, chatId returned }
+        "400": { description: Full or already joined }
+
+  /activities/{id}/rate:
+    post:
+      tags: [Activities]
+      summary: Rate participants after activity
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ratings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      user_id: { type: string, format: uuid }
+                      rating:  { type: integer, minimum: 1, maximum: 5 }
+      responses:
+        "200": { description: Ratings submitted }
+
+  /events:
+    get:
+      tags: [Events]
+      summary: List events with filters
+      parameters:
+        - { in: query, name: lat, required: true, schema: { type: number } }
+        - { in: query, name: lon, required: true, schema: { type: number } }
+        - { in: query, name: radius, schema: { type: integer, default: 10000 } }
+        - { in: query, name: category, schema: { type: string } }
+        - { in: query, name: price_max, schema: { type: number } }
+        - { in: query, name: date_from, schema: { type: string, format: date } }
+        - { in: query, name: date_to, schema: { type: string, format: date } }
+      responses:
+        "200": { description: List of events }
+    post:
+      tags: [Events]
+      summary: Create an event (host_guide role required)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:       { type: string }
+                description: { type: string }
+                category:    { type: string }
+                lat:         { type: number }
+                lon:         { type: number }
+                address_text: { type: string }
+                start_time:  { type: string, format: date-time }
+                end_time:    { type: string, format: date-time }
+                capacity:    { type: integer }
+                price:       { type: number }
+                currency:    { type: string }
+                image:       { type: string, format: binary }
+      responses:
+        "201": { description: Event created }
+
+  /events/{id}/book:
+    post:
+      tags: [Events]
+      summary: Book a ticket (pay via MoMo or Stripe)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_method:          { type: string, enum: [momo, stripe, free] }
+                phone_number:            { type: string }
+                stripe_payment_intent_id: { type: string }
+      responses:
+        "201": { description: Ticket booked with QR code }
+        "400": { description: Sold out or already booked }
+
+  /events/{id}/checkin:
+    post:
+      tags: [Events]
+      summary: Host scans QR to check in attendee — triggers escrow release
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticket_code: { type: string }
+      responses:
+        "200": { description: Checked in, escrow released }
+
+  /events/{id}/qr:
+    get:
+      tags: [Events]
+      summary: Get attendee QR ticket
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: QR code data URL }
+
+  /destinations:
+    get:
+      tags: [Destinations]
+      security: []
+      summary: List all adventure destinations (no auth required)
+      responses:
+        "200": { description: List of destinations }
+
+  /destinations/{id}:
+    get:
+      tags: [Destinations]
+      security: []
+      summary: Get destination detail with upcoming guided tours
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Destination + tours }
+
+  /transport/request:
+    post:
+      tags: [Transport]
+      summary: Request shared transport to an event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_or_activity_id, entity_type, lat, lon, from_address]
+              properties:
+                event_or_activity_id: { type: string, format: uuid }
+                entity_type:          { type: string, enum: [activity, event] }
+                lat:                  { type: number }
+                lon:                  { type: number }
+                from_address:         { type: string }
+                seats_needed:         { type: integer, minimum: 1, maximum: 4 }
+      responses:
+        "201": { description: Transport request created, groups formed }
+
+  /transport/groups:
+    get:
+      tags: [Transport]
+      summary: Get transport groups for an event
+      parameters:
+        - { in: query, name: event_id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Transport groups with members }
+
+  /transport/groups/{id}/join:
+    post:
+      tags: [Transport]
+      summary: Join a transport group and pay split fare
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone_number: { type: string }
+      responses:
+        "200": { description: Joined group }
+
+  /reports:
+    post:
+      tags: [Reports]
+      summary: Submit a safety report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reported_user_id, entity_type, entity_id, reason]
+              properties:
+                reported_user_id: { type: string, format: uuid }
+                entity_type:      { type: string, enum: [activity, event, user, message] }
+                entity_id:        { type: string, format: uuid }
+                reason:           { type: string, enum: [scam, harassment, fake_event, dangerous, no_show, other] }
+                description:      { type: string }
+      responses:
+        "201": { description: Report submitted, autoLocked flag returned }
+
+  /reports/mine:
+    get:
+      tags: [Reports]
+      summary: Get my submitted reports
+      responses:
+        "200": { description: List of reports }
+
+  /reports/{id}/police-packet:
+    get:
+      tags: [Reports]
+      summary: Generate and download police PDF packet
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: PDF URL returned }
+
+  /reports/{id}/send-to-police:
+    post:
+      tags: [Reports]
+      summary: Email report packet to Rwanda National Police
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Sent }
+
+  /payments:
+    get:
+      tags: [Payments]
+      summary: Get my payment history
+      responses:
+        "200": { description: Payment list }
+
+  /payments/{id}/status:
+    get:
+      tags: [Payments]
+      summary: Poll MoMo payment status
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Payment status }
