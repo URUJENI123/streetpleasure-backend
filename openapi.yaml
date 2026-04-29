@@ -1,14 +1,14 @@
 openapi: 3.0.3
 info:
-  title: Twikoranire API
+  title: Street Pleasure API
   description: Verified. Safe. Local. — Social activity, events, adventure & transport platform for Rwanda.
   version: 1.0.0
   contact:
-    name: Twikoranire Team
+    name: Street Pleasure Team
     email: dev@twikoranire.rw
 
 servers:
-  - url: https://api.twikoranire.rw/api
+  - url: https://api.streetpleasure.rw/api
     description: Production
   - url: http://localhost:5000/api
     description: Local development
