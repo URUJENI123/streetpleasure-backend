@@ -1,24 +1,45 @@
-const nearbyQuery = (latitude, longitude, radiusMeters) => ({
-    condition: `ST_DWithin(
-        location::geography, ST_MakePoint($1, $2)::geography, $3)`,
-    params: [longitude, latitude, radiusMeters],
-});
+const EARTH_RADIUS_M = 6371000;
 
-const parsePoint = (geostr) => {
-    if (!geostr) return null;
-    const match = geostr.match(/POINT\(([^ ]+) ([^ )]+)\)/);
-    if (!match) return null;
-    return { longitude: parseFloat(match[1]), latitude: parseFloat(match[2]) };
+/** Haversine distance in metres between two points */
+const haversine = (lat1, lon1, lat2, lon2) => {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat  = toRad(lat2 - lat1);
+  const dLon  = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return EARTH_RADIUS_M * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-const haversine = (a, b) => {
-    const R = 6371000;
-    const φ1 = a.latitude * Math.PI / 180;
-    const φ2 = b.latitude * Math.PI / 180;
-    const dφ = (b.latitude - a.latitude) * Math.PI / 180;
-    const dλ = (b.longitude - a.longitude) * Math.PI / 180;
-    const x = Math.sin(dφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(dλ / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+/**
+ * Filter a list of rows by proximity.
+ * Each row must have numeric `lat` and `lon` fields.
+ * Returns rows with an added `distance_m` field, sorted nearest first.
+ */
+const filterByRadius = (rows, centerLat, centerLon, radiusMeters) => {
+  return rows
+    .map((row) => ({
+      ...row,
+      distance_m: haversine(centerLat, centerLon, parseFloat(row.lat), parseFloat(row.lon)),
+    }))
+    .filter((row) => row.distance_m <= radiusMeters)
+    .sort((a, b) => a.distance_m - b.distance_m);
 };
 
-module.exports = { nearbyQuery, parsePoint, haversine };
+/**
+ * Build a bounding box for a rough SQL pre-filter before Haversine.
+ * Reduces the number of rows we need to process in JS.
+ * Returns { minLat, maxLat, minLon, maxLon }
+ */
+const boundingBox = (lat, lon, radiusMeters) => {
+  const latDelta = (radiusMeters / EARTH_RADIUS_M) * (180 / Math.PI);
+  const lonDelta = latDelta / Math.cos((lat * Math.PI) / 180);
+  return {
+    minLat: lat - latDelta,
+    maxLat: lat + latDelta,
+    minLon: lon - lonDelta,
+    maxLon: lon + lonDelta,
+  };
+};
+
+module.exports = { haversine, filterByRadius, boundingBox };

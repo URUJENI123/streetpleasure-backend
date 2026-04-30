@@ -7,7 +7,6 @@ const requestTransport = async (req, res, next) => {
   try {
     const { event_or_activity_id, entity_type, lat, lon, from_address, seats_needed = 1 } = req.body;
 
-    // Check no duplicate
     const { rows: dup } = await query(
       'SELECT 1 FROM transport_requests WHERE event_or_activity_id=$1 AND requester_id=$2',
       [event_or_activity_id, req.user.id]
@@ -16,15 +15,13 @@ const requestTransport = async (req, res, next) => {
 
     const { rows: [tr] } = await query(`
       INSERT INTO transport_requests
-        (event_or_activity_id, entity_type, requester_id, from_location, from_address, seats_needed)
-      VALUES ($1,$2,$3, ST_MakePoint($4,$5)::geography, $6,$7)
+        (event_or_activity_id, entity_type, requester_id, from_lat, from_lon, from_address, seats_needed)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *
     `, [event_or_activity_id, entity_type, req.user.id,
-        parseFloat(lon), parseFloat(lat), from_address, parseInt(seats_needed)]);
+        parseFloat(lat), parseFloat(lon), from_address, parseInt(seats_needed)]);
 
-    // Try to auto-cluster after each new request
     const groups = await clusterRequests(event_or_activity_id, entity_type);
-
     res.status(201).json({ request: tr, groupsFormed: groups.length, groups });
   } catch (err) { next(err); }
 };
@@ -60,9 +57,8 @@ const joinTransportGroup = async (req, res, next) => {
 
     const { rows: [grp] } = await query('SELECT * FROM transport_groups WHERE id=$1', [id]);
     if (!grp) return next(notFound('Transport group not found'));
-    if (grp.status !== 'open') return next(badReq('Group is no longer accepting members'));
+    if (grp.status !== 'open') return next(badReq('Group no longer accepting members'));
 
-    // Check already a member
     const { rows: existing } = await query(
       'SELECT 1 FROM transport_group_members WHERE group_id=$1 AND user_id=$2', [id, req.user.id]
     );
@@ -73,10 +69,9 @@ const joinTransportGroup = async (req, res, next) => {
       const { referenceId } = await requestPayment({
         amount:      grp.fare_per_seat,
         phoneNumber: phone_number,
-        paymentNote: 'streetpleasure shared transport',
+        paymentNote: 'Twikoranire shared transport',
         externalId:  `transport-${id}-${req.user.id}`,
       });
-
       const { rows: [pmt] } = await query(`
         INSERT INTO payments(user_id, amount, currency, method, status, provider_ref)
         VALUES($1,$2,'RWF','momo','pending',$3) RETURNING id
