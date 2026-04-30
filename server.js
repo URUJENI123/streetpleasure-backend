@@ -3,7 +3,7 @@ const http = require('http');
 const app = require('./src/app');
 const { initSocket } = require('./src/sockets/chatSocket');
 const cron = require('node-cron');
-const { expireOldChats } = require('./src/services/chatExpiry');
+const { expireOldChats } = require('./src/services/chatExiry');
 const { releaseEscrowDue } = require('./src/services/escrowRelease');
 
 const PORT = process.env.PORT || 5000;
@@ -18,7 +18,7 @@ cron.schedule('*/15 * * * *', async () => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Twikoranire API running on port ${PORT} [${process.env.NODE_ENV}]`);
+  console.log(`Street pleasure API running on port ${PORT} [${process.env.NODE_ENV}]`);
 });
 
 module.exports = server;

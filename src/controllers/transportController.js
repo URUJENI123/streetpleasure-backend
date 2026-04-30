@@ -73,7 +73,7 @@ const joinTransportGroup = async (req, res, next) => {
       const { referenceId } = await requestPayment({
         amount:      grp.fare_per_seat,
         phoneNumber: phone_number,
-        paymentNote: 'Twikoranire shared transport',
+        paymentNote: 'streetpleasure shared transport',
         externalId:  `transport-${id}-${req.user.id}`,
       });
 

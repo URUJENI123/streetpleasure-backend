@@ -1,5 +1,5 @@
-const stripe = require('stripe');
-const stripe = stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 const createPaymentIntent = async ({amountUSD, currency = 'usd', metadata = {} }) => {
     const intent = await stripe.paymentIntents.create({

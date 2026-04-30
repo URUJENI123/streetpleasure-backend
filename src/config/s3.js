@@ -25,4 +25,6 @@ const getSignedDownloadUrl = async (key, expiresIn = 3600) => {
   return getSignedUrl(s3, command, { expiresIn });
 };
 
-module.exports = { s3, uploadToS3, getSignedDownloadUrl };
+const BUCKET = process.env.S3_BUCKET || 'your-bucket-name';
+
+module.exports = { s3, BUCKET, uploadToS3, getSignedDownloadUrl };
