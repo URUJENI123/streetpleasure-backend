@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "twikoranire-api-collection",
-    "name": "Twikoranire API",
-    "description": "Verified. Safe. Local. — Complete API collection for Twikoranire backend. \n\nSetup:\n1. Set `baseUrl` variable to `http://localhost:5000/api`\n2. Register and verify OTP to get tokens\n3. Access token auto-saves to `accessToken` variable after login",
+    "_postman_id": "streetpleasure-api-collection",
+    "name": "Streetpleasure API",
+    "description": "Verified. Safe. Local. — Complete API collection for Streetpleasure backend. \n\nSetup:\n1. Set `baseUrl` variable to `http://localhost:5000/api`\n2. Register and verify OTP to get tokens\n3. Access token auto-saves to `accessToken` variable after login",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -21,7 +21,7 @@
   "item": [
 
     {
-      "name": "🔐 Auth",
+      "name": "Auth",
       "item": [
         {
           "name": "Register (Send OTP)",
@@ -142,7 +142,7 @@
     },
 
     {
-      "name": "👤 Users",
+      "name": "Users",
       "item": [
         {
           "name": "Get My Profile",
@@ -184,7 +184,7 @@
     },
 
     {
-      "name": "🏃 Activities",
+      "name": "Activities",
       "item": [
         {
           "name": "List Nearby Activities",
@@ -322,7 +322,7 @@
     },
 
     {
-      "name": "🎉 Events",
+      "name": "Events",
       "item": [
         {
           "name": "List Nearby Events",
@@ -528,7 +528,7 @@
     },
 
     {
-      "name": "🌍 Destinations",
+      "name": "Destinations",
       "item": [
         {
           "name": "List All Destinations",
@@ -588,7 +588,7 @@
     },
 
     {
-      "name": "🚗 Transport",
+      "name": "Transport",
       "item": [
         {
           "name": "Request Shared Transport",
@@ -668,7 +668,7 @@
     },
 
     {
-      "name": "🚨 Reports",
+      "name": "Reports",
       "item": [
         {
           "name": "Submit Report",
@@ -746,7 +746,7 @@
     },
 
     {
-      "name": "💳 Payments",
+      "name": "Payments",
       "item": [
         {
           "name": "Get My Payment History",
@@ -786,7 +786,7 @@
     },
 
     {
-      "name": "❤️ Health",
+      "name": "Health",
       "item": [
         {
           "name": "Health Check",
