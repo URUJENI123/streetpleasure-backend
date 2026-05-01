@@ -9,7 +9,7 @@ const register = async (req, res, next) => {
         const { phone_number } = req.body;
         const { rows } = await query(`
             INSERT INTO users (phone_number) VALUES ($1)
-            ON CONFLICT (phone_number) DO UPDATE SET upadated_at = NOW()
+            ON CONFLICT (phone_number) DO UPDATE SET updated_at = NOW()
             RETURNING id, role, locked_at
             `, [phone_number]);
 

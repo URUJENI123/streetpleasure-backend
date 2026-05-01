@@ -27,10 +27,10 @@ async function testConnection() {
     const client = await pool.connect();
     const result = await client.query('SELECT NOW()');
     client.release();
-    console.log('✅ Database connected:', result.rows[0].now);
+    console.log('Database connected:', result.rows[0].now);
     return true;
   } catch (err) {
-    console.error('❌ Database connection failed:', err.message);
+    console.error('Database connection failed:', err.message);
     return false;
   }
 }

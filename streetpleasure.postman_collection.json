@@ -1,0 +1,804 @@
+{
+  "info": {
+    "_postman_id": "twikoranire-api-collection",
+    "name": "Twikoranire API",
+    "description": "Verified. Safe. Local. — Complete API collection for Twikoranire backend. \n\nSetup:\n1. Set `baseUrl` variable to `http://localhost:5000/api`\n2. Register and verify OTP to get tokens\n3. Access token auto-saves to `accessToken` variable after login",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",      "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "accessToken",  "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "userId",       "value": "", "type": "string" },
+    { "key": "activityId",   "value": "", "type": "string" },
+    { "key": "eventId",      "value": "", "type": "string" },
+    { "key": "chatId",       "value": "", "type": "string" },
+    { "key": "reportId",     "value": "", "type": "string" },
+    { "key": "paymentId",    "value": "", "type": "string" },
+    { "key": "ticketCode",   "value": "", "type": "string" },
+    { "key": "groupId",      "value": "", "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register (Send OTP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+250780123456\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.refreshToken);",
+                  "  pm.collectionVariables.set('userId', res.userId);",
+                  "  pm.test('Tokens received', () => pm.expect(res.accessToken).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["auth","verify-otp"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+250780123456\",\n  \"otp\": \"123456\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify ID (National ID)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/verify-id", "host": ["{{baseUrl}}"], "path": ["auth","verify-id"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "id_image", "type": "file", "src": "" },
+                { "key": "selfie",   "type": "file", "src": "" },
+                { "key": "id_type",  "value": "NATIONAL_ID", "type": "text" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify ID (Passport / Tourist)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/verify-id", "host": ["{{baseUrl}}"], "path": ["auth","verify-id"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "id_image", "type": "file", "src": "" },
+                { "key": "selfie",   "type": "file", "src": "" },
+                { "key": "id_type",  "value": "PASSPORT", "type": "text" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth","refresh"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth","logout"] },
+            "body": { "mode": "raw", "raw": "" }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "👤 Users",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users","me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users","me"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "full_name",  "value": "Jean Paul Uwimana", "type": "text" },
+                { "key": "bio",        "value": "Adventure lover from Kigali 🏔️", "type": "text" },
+                { "key": "fcm_token",  "value": "your-fcm-device-token", "type": "text" },
+                { "key": "avatar",     "type": "file", "src": "" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🏃 Activities",
+      "item": [
+        {
+          "name": "List Nearby Activities",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/activities?lat=-1.9403&lon=30.0615&radius=5000",
+              "host": ["{{baseUrl}}"],
+              "path": ["activities"],
+              "query": [
+                { "key": "lat",    "value": "-1.9403" },
+                { "key": "lon",    "value": "30.0615" },
+                { "key": "radius", "value": "5000" },
+                { "key": "type",   "value": "hike", "disabled": true },
+                { "key": "limit",  "value": "20",   "disabled": true },
+                { "key": "offset", "value": "0",    "disabled": true }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Activity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.activity) pm.collectionVariables.set('activityId', res.activity.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/activities", "host": ["{{baseUrl}}"], "path": ["activities"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hike to Mount Kigali this Saturday 8am\",\n  \"description\": \"Easy hike, bring water and good shoes.\",\n  \"activity_type\": \"hike\",\n  \"lat\": -1.9403,\n  \"lon\": 30.0615,\n  \"address_text\": \"Kigali City Centre, near Kimironko\",\n  \"scheduled_at\": \"2025-08-10T06:00:00.000Z\",\n  \"max_participants\": 4\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Activity Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/activities/{{activityId}}", "host": ["{{baseUrl}}"], "path": ["activities","{{activityId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Join Activity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.chatId) pm.collectionVariables.set('chatId', res.chatId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/activities/{{activityId}}/join", "host": ["{{baseUrl}}"], "path": ["activities","{{activityId}}","join"] },
+            "body": { "mode": "raw", "raw": "" }
+          },
+          "response": []
+        },
+        {
+          "name": "Leave Activity",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/activities/{{activityId}}/leave", "host": ["{{baseUrl}}"], "path": ["activities","{{activityId}}","leave"] },
+            "body": { "mode": "raw", "raw": "" }
+          },
+          "response": []
+        },
+        {
+          "name": "Check In Participant (Host only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/activities/{{activityId}}/checkin", "host": ["{{baseUrl}}"], "path": ["activities","{{activityId}}","checkin"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{userId}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rate Participants",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/activities/{{activityId}}/rate", "host": ["{{baseUrl}}"], "path": ["activities","{{activityId}}","rate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ratings\": [\n    { \"user_id\": \"{{userId}}\", \"rating\": 5 }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Activity (Creator only)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/activities/{{activityId}}/cancel", "host": ["{{baseUrl}}"], "path": ["activities","{{activityId}}","cancel"] },
+            "body": { "mode": "raw", "raw": "" }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🎉 Events",
+      "item": [
+        {
+          "name": "List Nearby Events",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/events?lat=-1.9403&lon=30.0615&radius=10000",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                { "key": "lat",       "value": "-1.9403" },
+                { "key": "lon",       "value": "30.0615" },
+                { "key": "radius",    "value": "10000" },
+                { "key": "category",  "value": "music",     "disabled": true },
+                { "key": "price_max", "value": "5000",      "disabled": true },
+                { "key": "date_from", "value": "2025-08-01","disabled": true },
+                { "key": "date_to",   "value": "2025-08-31","disabled": true }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event (Host/Guide only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.event) pm.collectionVariables.set('eventId', res.event.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title",        "value": "Silent Disco Kigali", "type": "text" },
+                { "key": "description",  "value": "A night of wireless headphone dancing at Kigali Heights.", "type": "text" },
+                { "key": "category",     "value": "music", "type": "text" },
+                { "key": "lat",          "value": "-1.9441", "type": "text" },
+                { "key": "lon",          "value": "30.0619", "type": "text" },
+                { "key": "address_text", "value": "Kigali Heights, KG 7 Ave", "type": "text" },
+                { "key": "start_time",   "value": "2025-08-15T20:00:00.000Z", "type": "text" },
+                { "key": "end_time",     "value": "2025-08-16T02:00:00.000Z", "type": "text" },
+                { "key": "capacity",     "value": "150", "type": "text" },
+                { "key": "price",        "value": "5000", "type": "text" },
+                { "key": "currency",     "value": "RWF", "type": "text" },
+                { "key": "carpool_lat",  "value": "-1.9450", "type": "text" },
+                { "key": "carpool_lon",  "value": "30.0600", "type": "text" },
+                { "key": "image",        "type": "file", "src": "" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Event",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}/publish", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","publish"] },
+            "body": { "mode": "raw", "raw": "" }
+          },
+          "response": []
+        },
+        {
+          "name": "Book Event — Free",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ticketCode) pm.collectionVariables.set('ticketCode', res.ticketCode);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}/book", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","book"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"free\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Book Event — MoMo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ticketCode) pm.collectionVariables.set('ticketCode', res.ticketCode);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}/book", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","book"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"momo\",\n  \"phone_number\": \"+250780123456\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Book Event — Stripe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ticketCode) pm.collectionVariables.set('ticketCode', res.ticketCode);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}/book", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","book"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"stripe\",\n  \"stripe_payment_intent_id\": \"pi_test_xxxxxxxxxxxx\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My QR Ticket",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}/qr", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","qr"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Check In Attendee (Host scans QR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}/checkin", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","checkin"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticket_code\": \"{{ticketCode}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Event (Host only)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}/cancel", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","cancel"] },
+            "body": { "mode": "raw", "raw": "" }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🌍 Destinations",
+      "item": [
+        {
+          "name": "List All Destinations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/destinations", "host": ["{{baseUrl}}"], "path": ["destinations"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Destination — Volcanoes NP",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/destinations/volcanoes-np", "host": ["{{baseUrl}}"], "path": ["destinations","volcanoes-np"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Destination — Nyungwe NP",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/destinations/nyungwe-np", "host": ["{{baseUrl}}"], "path": ["destinations","nyungwe-np"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Destination — Akagera NP",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/destinations/akagera-np", "host": ["{{baseUrl}}"], "path": ["destinations","akagera-np"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Destination — Lake Kivu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/destinations/lake-kivu", "host": ["{{baseUrl}}"], "path": ["destinations","lake-kivu"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Destination — Gishwati-Mukura NP",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/destinations/gishwati-mukura-np", "host": ["{{baseUrl}}"], "path": ["destinations","gishwati-mukura-np"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🚗 Transport",
+      "item": [
+        {
+          "name": "Request Shared Transport",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.groups && res.groups[0]) pm.collectionVariables.set('groupId', res.groups[0].groupId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/transport/request", "host": ["{{baseUrl}}"], "path": ["transport","request"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_or_activity_id\": \"{{eventId}}\",\n  \"entity_type\": \"event\",\n  \"lat\": -1.9550,\n  \"lon\": 30.0580,\n  \"from_address\": \"Kimironko Market, Kigali\",\n  \"seats_needed\": 1\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transport Groups for Event",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/transport/groups?event_id={{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["transport","groups"],
+              "query": [{ "key": "event_id", "value": "{{eventId}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Join Transport Group — Free",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/transport/groups/{{groupId}}/join", "host": ["{{baseUrl}}"], "path": ["transport","groups","{{groupId}}","join"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Join Transport Group — Pay with MoMo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/transport/groups/{{groupId}}/join", "host": ["{{baseUrl}}"], "path": ["transport","groups","{{groupId}}","join"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+250780123456\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🚨 Reports",
+      "item": [
+        {
+          "name": "Submit Report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.report) pm.collectionVariables.set('reportId', res.report.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/reports", "host": ["{{baseUrl}}"], "path": ["reports"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reported_user_id\": \"{{userId}}\",\n  \"entity_type\": \"event\",\n  \"entity_id\": \"{{eventId}}\",\n  \"reason\": \"scam\",\n  \"description\": \"This user collected entry fees but the event never happened.\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Reports",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/reports/mine", "host": ["{{baseUrl}}"], "path": ["reports","mine"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Police PDF Packet",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/reports/{{reportId}}/police-packet", "host": ["{{baseUrl}}"], "path": ["reports","{{reportId}}","police-packet"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Report to Rwanda National Police",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/reports/{{reportId}}/send-to-police", "host": ["{{baseUrl}}"], "path": ["reports","{{reportId}}","send-to-police"] },
+            "body": { "mode": "raw", "raw": "" }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Report (Admin only)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/reports/{{reportId}}/resolve", "host": ["{{baseUrl}}"], "path": ["reports","{{reportId}}","resolve"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"admin_note\": \"Violation confirmed. User permanently banned.\",\n  \"unlock_user\": false\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "💳 Payments",
+      "item": [
+        {
+          "name": "Get My Payment History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/payments", "host": ["{{baseUrl}}"], "path": ["payments"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Poll MoMo Payment Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/payments/{{paymentId}}/status", "host": ["{{baseUrl}}"], "path": ["payments","{{paymentId}}","status"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Stripe Webhook (Internal — not for manual testing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",    "value": "application/json" },
+              { "key": "stripe-signature","value": "t=xxxx,v1=xxxx" }
+            ],
+            "url": { "raw": "{{baseUrl}}/payments/stripe/webhook", "host": ["{{baseUrl}}"], "path": ["payments","stripe","webhook"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"type\": \"payment_intent.amount_capturable_updated\", \"data\": { \"object\": { \"id\": \"pi_test\" } } }"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "❤️ Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/health", "host": ["http://localhost:5000"], "path": ["health"] }
+          },
+          "response": []
+        }
+      ]
+    }
+
+  ]
+}
