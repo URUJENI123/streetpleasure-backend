@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "$schema": "https://json.schemastore.org/package.json",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
@@ -11,7 +12,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1039.0",
     "@aws-sdk/s3-request-presigner": "^3.1039.0",

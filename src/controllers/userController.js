@@ -1,7 +1,7 @@
 const { query } = require('../config/db');
 const { notFound } = require('../utils/errors');
 
-const getMe = async (req, res, next) => {
+const getMe  = async (req, res, next) => {
   try {
     const { rows: [user] } = await query(`
       SELECT id, phone_number, role, full_name, bio, avatar_url,
