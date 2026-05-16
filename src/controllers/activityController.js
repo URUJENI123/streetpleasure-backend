@@ -21,8 +21,8 @@ const listActivities = async (req, res, next) => {
       LEFT JOIN activity_participants ap ON ap.activity_id = a.id
       WHERE a.status = 'open'
         AND a.scheduled_at > NOW()
-        AND a.lat BETWEEN $1 AND $2
-        AND a.lon BETWEEN $3 AND $4
+        AND a.latitude BETWEEN $1 AND $2
+        AND a.longitude BETWEEN $3 AND $4
     `;
     const params = [bbox.minLat, bbox.maxLat, bbox.minLon, bbox.maxLon];
     let idx = 5;
@@ -70,7 +70,7 @@ const createActivity = async (req, res, next) => {
 
     const { rows } = await query(`
       INSERT INTO activities
-        (creator_id, title, description, activity_type, lat, lon, address_text, scheduled_at, max_participants)
+        (creator_id, title, description, activity_type, latitude, longitude, address_text, scheduled_at, max_participants)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
       RETURNING *
     `, [req.user.id, title, description, activity_type,

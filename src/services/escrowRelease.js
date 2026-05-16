@@ -4,12 +4,12 @@ const { disburse } = require('./momo');
 const releaseEscrowDue = async () => {
     const {rows: events} = await  query(`
         SELECT e.id, e.host_id, e.price, e.currency,
-               e.phone_number, AS host_phone,
+               u.phone_number AS host_phone,
                COUNT(ea.user_id) AS attendee_count
         FROM events e
         JOIN users u ON u.id = e.host_id
         JOIN event_attendees ea ON ea.event_id = e.id AND ea.paid = TRUE
-        WHERE e.status = 'competed'
+        WHERE e.status = 'completed'
           AND e.end_time < NOW() - INTERVAL '2 hours'
           AND e.escrow_id IS NOT NULL
         GROUP BY e.id, u.phone_number
@@ -17,7 +17,7 @@ const releaseEscrowDue = async () => {
 
     for (const evt of events) {
         try {
-            const total  = parseFlat(evt.price) * parseInt(evt.attendee_count);
+            const total  = parseFloat(evt.price) * parseInt(evt.attendee_count);
             const commission = total * (parseFloat(process.env.PLATFORM_COMMISSION_PCT || '10') / 100);
             const hostPayout = total - commission;
 

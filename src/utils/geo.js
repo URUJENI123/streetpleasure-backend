@@ -20,7 +20,12 @@ const filterByRadius = (rows, centerLat, centerLon, radiusMeters) => {
   return rows
     .map((row) => ({
       ...row,
-      distance_m: haversine(centerLat, centerLon, parseFloat(row.lat), parseFloat(row.lon)),
+      distance_m: haversine(
+        centerLat, 
+        centerLon, 
+        parseFloat(row.lat !== undefined ? row.lat : row.latitude), 
+        parseFloat(row.lon !== undefined ? row.lon : row.longitude)
+      ),
     }))
     .filter((row) => row.distance_m <= radiusMeters)
     .sort((a, b) => a.distance_m - b.distance_m);
